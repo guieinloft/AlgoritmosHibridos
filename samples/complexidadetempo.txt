@@ -1,0 +1,24 @@
+Random Quick Sort:
+Complexidade de tempo:
+Melhor caso/caso medio: O(2 n log n) -> O(n log n)
+Pior caso: O(2 n^2) -> O(n^2)
+
+Complexidade de espaço:
+O(log n) (devido a recursao)
+
+Bucket Shell Sort:
+Complexidade de tempo:
+Melhor caso/caso medio: O( k + 3n + (n log n / k) )
+Explicacao:
+- k: para inicializar os buckets (k = n. de buckets)
+- 3n: n para encontrar o maior numero, n para separar os buckets e n para concatenar ao final
+- n log n / k: media do n de iteracoes por bucket
+
+Substituindo k por n/100:
+O( n/100 + 3n + 100 log n ) -> O(n)
+
+Pior caso: O(n^(4/3)) (provado) / O(n log^2 n) (provável)
+
+Complexidade de espaço:
+Melhor caso: O(n) (n/100 buckets inicializados com tamanho 100 para n > 100, 1 bucket com tamanho n para n < 100);
+Pior caso: aprox. O(3n) -> O(n) (1 bucket com tamanho 2^ceil(log n/100) (n/100 <= 2^(ceil(log n/100) < 2n/100) + (n/100)-1 buckets com tamanho 100);

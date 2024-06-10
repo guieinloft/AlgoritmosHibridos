@@ -62,8 +62,11 @@ int main(int argc, char *argv[]){
     t = (int)atoi(argv[1]);
     v = (int*)malloc(t * sizeof(int));
     printf("Vetor de tamanho %d criado\n", t);
+    FILE *arq = fopen(argv[2], "r");
     for(i = 0; i < t; i++){
-        fscanf(stdin, "%d", &v[i]);
+        if(fscanf(arq, "%d", &v[i]) == EOF){
+            printf("Arquivo chegou ao final antes do vetor ser preenchido.\n");
+        }
     }
     printf("Vetor preenchido\n");
     rquick(v, 0, t-1);
