@@ -1,16 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+#include <string.h>
 #include "ExternalSorting.h"
-
-#define SIZE_INTERNAL 1000
 
 int gaps[] = {1, 4, 10, 23, 57, 132, 301, 701, 1636, 3657, 8172, 18235, 40764, 91064, 203519, 454741, 1016156, 2270499, 5073398, 11335582, 25328324, 56518561, 126451290, 282544198, 631315018};
 
-int ordenado(int v[], int i, int s){
+int writeArray(int v[], int s, FILE *out){
+    int i = 0;
     while(i < s){
-        if(v[i] > v[i+1]) return 0;
+        fprintf(out, "%d\n", v[i]);
         i++;
+    }
+    return 1;
+}
+
+int checkSortedFile(FILE *in){
+    int a, b;
+    if(fscanf(in, "%d", &a) == EOF) return 1;
+    while(fscanf(in, "%d", &b) != EOF){
+        if(a > b) return 0;
+        a = b;
     }
     return 1;
 }
@@ -47,7 +56,7 @@ struct bucket{
 typedef struct bucket Bucket;
 
 Bucket *createBuckets(int size, int bnum){
-    int bsize = (size / bnum) + 1;
+    int bsize = (size / bnum);
     Bucket *barray = (Bucket*)malloc(sizeof(Bucket) * bnum);
     int i = 0;
     while(i < bnum){
@@ -68,7 +77,7 @@ void fillBuckets(int v[], int size, Bucket *b, int largest, int bnum){
     int i = 0;
     int bindex;
     while(i < size){
-        bindex = (v[i])*bnum/(largest+1);
+        bindex = (v[i])*((double)bnum/(largest+1));
         if(b[bindex].size == b[bindex].max) resizeBucket(b, bindex);
         b[bindex].bucket[b[bindex].size] = v[i];
         b[bindex].size++;
@@ -115,42 +124,56 @@ int findNumBuckets(int size){
     return (size/100);
 }
 
-void sort(int *v, int t){
+void sort(int *v, int s){
     int bnum, largest;
-    bnum = findNumBuckets(t);
-    Bucket *b = createBuckets(t, bnum);
+    bnum = findNumBuckets(s);
+    Bucket *b = createBuckets(s, bnum);
     printf("%d buckets criados com tamanho %d\n", bnum, b[1].max);
-    largest = findLargest(v, t);
+    largest = findLargest(v, s);
     printf("Maior: %d\n", largest);
-    fillBuckets(v, t, b, largest, bnum);
+    fillBuckets(v, s, b, largest, bnum);
     printf("Buckets preenchidos\n");
     sortBuckets(b, bnum);
     printf("Buckets ordenados\n");
-    returnBuckets(v, t, b, bnum);
+    returnBuckets(v, s, b, bnum);
     printf("Buckets retornados\n");
 }
 
 int main(int argc, char *argv[]){
     int i, *v, t;
+    if(argc < 4){
+        printf("Argumentos insuficientes.\nModo de uso: BucketShellSort {num_elementos} {arq_input} {arq_output} {--no-cleanup}\n");
+        return -1;
+    }
     t = (int)atoi(argv[1]);
-    FILE *arq = fopen(argv[2], "r");
+    FILE *in = fopen(argv[2], "r");
+    FILE *out = fopen(argv[3], "w");
     if(t <= SIZE_INTERNAL){
         v = (int*)malloc(t * sizeof(int));
         printf("Vetor de tamanho %d criado\n", t);
         for(i = 0; i < t; i++){
-            if(fscanf(arq, "%d", &v[i]) == EOF){
+            if(fscanf(in, "%d", &v[i]) == EOF){
                 printf("Arquivo chegou ao final antes do vetor ser preenchido.\n");
+                return -1;
             }
         }
         printf("Vetor preenchido\n");
         sort(v, t);
-        if(ordenado(v, 0, t-1)) printf("Vetor ordenado\n");
-        else printf("Vetor nao ordenado\n");
+        writeArray(v, t, out);
     } else {
-        int k = createRuns(t, SIZE_INTERNAL, sort, arq);
-        printf("%d\n", k);
-        FILE *out = fopen("./output.txt", "w");
+        int k = createRuns(t, SIZE_INTERNAL, sort, in);
+        printf("%d runs criadas com tamanho <= %d\n", k, SIZE_INTERNAL);
         mergeRuns(k, t, out);
+        printf("Runs mescladas\n");
+        if(argc < 5 || strcmp(argv[4], "--no-cleanup")) cleanup(k);
     }
+    printf("Vetor salvo em %s\n", argv[3]);
+    fclose(in);
+    fclose(out);
+    /* checa se arquivo esta ordenado */
+    in = fopen(argv[3], "r");
+    if(checkSortedFile(in)) printf("Vetor ordenado\n");
+    else printf("Vetor nao ordenado\n");
+    fclose(in);
     return 0;
 }

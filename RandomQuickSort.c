@@ -1,25 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "ExternalSorting.h"
 
-void imprimevet(int v[], int t){
+int writeArray(int v[], int s, FILE *out){
     int i = 0;
-    while(i < t){
-        printf("%d ", v[i]);
-        i++;
-    }
-    putchar('\n');
-}
-
-int ordenado(int v[], int l, int r){
-    int i = l;
-    while(i < r){
-        if(v[i] > v[i+1]) return 0;
+    while(i < s){
+        fprintf(out, "%d\n", v[i]);
         i++;
     }
     return 1;
 }
 
-void aleatoriza(int v[], int l, int r){
+int checkSortedFile(FILE *in){
+    int a, b;
+    if(fscanf(in, "%d", &a) == EOF) return 1;
+    while(fscanf(in, "%d", &b) != EOF){
+        if(a > b) return 0;
+        a = b;
+    }
+    return 1;
+}
+
+void randomizeArray(int v[], int l, int r){
     int i = l, aux, ran;
     while(i < (r+1)){
         ran = rand()%(r+1-l);
@@ -30,7 +33,7 @@ void aleatoriza(int v[], int l, int r){
     }
 }
 
-int particiona(int v[], int l, int r){
+int partitionArray(int v[], int l, int r){
     int i = l, j = l+1, aux;
     while(j < (r+1)){
         if(v[j] <= v[l]){
@@ -48,29 +51,54 @@ int particiona(int v[], int l, int r){
     return i;
 }
 
-void rquick(int v[], int l, int r){
+void randomQuickSort(int v[], int l, int r){
     if(l < r){
-        aleatoriza(v, l, r);
-        int ip = particiona(v, l, r);
-        rquick(v, l, ip-1);
-        rquick(v, ip+1, r);
+        randomizeArray(v, l, r);
+        int ip = partitionArray(v, l, r);
+        randomQuickSort(v, l, ip-1);
+        randomQuickSort(v, ip+1, r);
     }
 }
 
+void sort(int *v, int s){
+    randomQuickSort(v, 0, s-1);
+}
+
 int main(int argc, char *argv[]){
-    int i, *v, aux, t;
-    t = (int)atoi(argv[1]);
-    v = (int*)malloc(t * sizeof(int));
-    printf("Vetor de tamanho %d criado\n", t);
-    FILE *arq = fopen(argv[2], "r");
-    for(i = 0; i < t; i++){
-        if(fscanf(arq, "%d", &v[i]) == EOF){
-            printf("Arquivo chegou ao final antes do vetor ser preenchido.\n");
-        }
+    int i, *v, t;
+    if(argc < 4){
+        printf("Argumentos insuficientes.\nModo de uso: RandomQuickSort {num_elementos} {arq_input} {arq_output} {--no-cleanup}\n");
+        return -1;
     }
-    printf("Vetor preenchido\n");
-    rquick(v, 0, t-1);
-    if(ordenado(v, 0, t-1)) printf("Vetor ordenado\n");
+    t = (int)atoi(argv[1]);
+    FILE *in = fopen(argv[2], "r");
+    FILE *out = fopen(argv[3], "w");
+    if(t <= SIZE_INTERNAL){
+        v = (int*)malloc(t * sizeof(int));
+        printf("Vetor de tamanho %d criado\n", t);
+        for(i = 0; i < t; i++){
+            if(fscanf(in, "%d", &v[i]) == EOF){
+                printf("Arquivo chegou ao final antes do vetor ser preenchido.\n");
+                return -1;
+            }
+        }
+        printf("Vetor preenchido\n");
+        sort(v, t);
+        writeArray(v, t, out);
+    } else {
+        int k = createRuns(t, SIZE_INTERNAL, sort, in);
+        printf("%d runs criadas com tamanho <= %d\n", k, SIZE_INTERNAL);
+        mergeRuns(k, t, out);
+        printf("Runs mescladas\n");
+        if(argc < 5 || strcmp(argv[4], "--no-cleanup")) cleanup(k);
+    }
+    printf("Vetor salvo em %s\n", argv[3]);
+    fclose(in);
+    fclose(out);
+    /* checa se arquivo esta ordenado */
+    in = fopen(argv[3], "r");
+    if(checkSortedFile(in)) printf("Vetor ordenado\n");
     else printf("Vetor nao ordenado\n");
+    fclose(in);
     return 0;
 }

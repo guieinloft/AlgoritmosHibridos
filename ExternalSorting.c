@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <limits.h>
 #include "ExternalSorting.h"
 
 Heap *createHeap(int size){
@@ -81,6 +82,7 @@ int createRuns(int nelements, int sizeruns, void (*sort)(int*, int), FILE *input
             fprintf(temp, "%d\n", v[k]);
             k++;
         }
+        fclose(temp);
         i++;
     }
     free(v);
@@ -97,6 +99,16 @@ void freeHeap(Heap *h){
     free(h);
 }
 
+void cleanup(int size){
+    int i = 0;
+    char str[11];
+    while(i < size){
+        sprintf(str, "temp%02d.txt", i);
+        remove(str);
+        i++;
+    }
+}
+
 void mergeRuns(int size, int nelements, FILE *output){
     int i = 0, aux;
     Heap *h = createHeap(size);
@@ -104,12 +116,10 @@ void mergeRuns(int size, int nelements, FILE *output){
     buildHeap(h);
     while(i < nelements && h->size > 0){
         fprintf(output, "%d\n", h->vet[0].v);
-        printf("%d, %d\n", h->vet[0].v, h->vet[0].index);
         if(fscanf(h->vet[0].file, "%d", &aux) != EOF){
             h->vet[0].v = aux;
             h->vet[0].num++;
         } else {
-            printf("Finished run %d, %d\n", h->vet[0].index, h->vet[0].num);
             (h->size)--;
             swap(&(h->vet[0]), &(h->vet[h->size]));
         }
