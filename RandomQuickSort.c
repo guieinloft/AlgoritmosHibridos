@@ -67,7 +67,7 @@ void sort(int *v, int s){
 int main(int argc, char *argv[]){
     int i, *v, t;
     if(argc < 4){
-        printf("Argumentos insuficientes.\nModo de uso: RandomQuickSort {num_elementos} {arq_input} {arq_output} {--no-cleanup}\n");
+        printf("Argumentos insuficientes.\nModo de uso: BucketShellSort {num_elementos} {arq_input} {arq_output} {--no-cleanup}\n");
         return -1;
     }
     t = (int)atoi(argv[1]);
@@ -87,6 +87,10 @@ int main(int argc, char *argv[]){
         writeArray(v, t, out);
     } else {
         int k = createRuns(t, SIZE_INTERNAL, sort, in);
+        if(k > 500){
+            printf("Numero de elementos muito alto\n");
+            return -2;
+        }
         printf("%d runs criadas com tamanho <= %d\n", k, SIZE_INTERNAL);
         mergeRuns(k, t, out);
         printf("Runs mescladas\n");

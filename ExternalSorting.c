@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <limits.h>
 #include "ExternalSorting.h"
 
 Heap *createHeap(int size){
@@ -12,11 +11,12 @@ Heap *createHeap(int size){
 }
 
 void openTemps(Heap *h){
-    char str[11];
+    char str[50];
     int i = 0;
     while(i < h->size){
-        sprintf(str, "temp%02d.txt", i);
+        sprintf(str, "temp%d.txt", i);
         h->vet[i].file = fopen(str, "r");
+        printf("%s\n", str);
         if(h->vet[i].file == NULL) printf("ops\n");
         fscanf(h->vet[i].file, "%d", &(h->vet[i].v));
         h->vet[i].index = i;
@@ -66,10 +66,10 @@ int createRuns(int nelements, int sizeruns, void (*sort)(int*, int), FILE *input
     int size = nelements/sizeruns + ((float)nelements/sizeruns > nelements/sizeruns);
     int i = 0, j, k, aux;
     int *v = (int*)malloc(sizeof(int) * sizeruns);
-    char str[11];
+    char str[50];
     FILE *temp;
     while(i < size){
-        sprintf(str, "temp%02d.txt", i);
+        sprintf(str, "temp%d.txt", i);
         j = 0;
         k = 0;
         while(j < sizeruns && fscanf(input, "%d", &aux) != EOF){
@@ -101,9 +101,9 @@ void freeHeap(Heap *h){
 
 void cleanup(int size){
     int i = 0;
-    char str[11];
+    char str[50];
     while(i < size){
-        sprintf(str, "temp%02d.txt", i);
+        sprintf(str, "temp%d.txt", i);
         remove(str);
         i++;
     }

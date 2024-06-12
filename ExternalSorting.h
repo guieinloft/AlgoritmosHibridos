@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define SIZE_INTERNAL 1048576
+#define SIZE_INTERNAL 4194304
 
 struct element{
     int v;

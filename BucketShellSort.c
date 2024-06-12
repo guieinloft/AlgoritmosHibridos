@@ -57,6 +57,7 @@ typedef struct bucket Bucket;
 
 Bucket *createBuckets(int size, int bnum){
     int bsize = (size / bnum);
+    printf("%d, %d, %d", size, bnum, bsize);
     Bucket *barray = (Bucket*)malloc(sizeof(Bucket) * bnum);
     int i = 0;
     while(i < bnum){
@@ -73,11 +74,11 @@ void resizeBucket(Bucket *b, int i){
     b[i].bucket = (int*)realloc(b[i].bucket, sizeof(int) * b[i].max);
 }
 
-void fillBuckets(int v[], int size, Bucket *b, int largest, int bnum){
+void fillBuckets(int v[], int size, Bucket *b, int max, int min, int bnum){
     int i = 0;
     int bindex;
     while(i < size){
-        bindex = (v[i])*((double)bnum/(largest+1));
+        bindex = (int)(((long long)v[i] - min)*((double)bnum/((long long)max - min + 1)));
         if(b[bindex].size == b[bindex].max) resizeBucket(b, bindex);
         b[bindex].bucket[b[bindex].size] = v[i];
         b[bindex].size++;
@@ -110,13 +111,15 @@ void returnBuckets(int v[], int size, Bucket *b, int bnum){
     free(b);
 }
 
-int findLargest(int v[], int size){
-    int i = 0, largest = 0;
+void findMaxMin(int v[], int size, int *max, int *min){
+    int i = 1;
+    *max = v[0];
+    *min = v[0];
     while(i < size){
-        if(largest < v[i]) largest = v[i];
+        if(*max < v[i]) *max = v[i];
+        if(*min > v[i]) *min = v[i];
         i++;
     }
-    return largest;
 }
 
 int findNumBuckets(int size){
@@ -125,13 +128,13 @@ int findNumBuckets(int size){
 }
 
 void sort(int *v, int s){
-    int bnum, largest;
+    int bnum, max, min;
     bnum = findNumBuckets(s);
     Bucket *b = createBuckets(s, bnum);
-    printf("%d buckets criados com tamanho %d\n", bnum, b[1].max);
-    largest = findLargest(v, s);
-    printf("Maior: %d\n", largest);
-    fillBuckets(v, s, b, largest, bnum);
+    printf("%d buckets criados com tamanho %d\n", bnum, b[0].max);
+    findMaxMin(v, s, &max, &min);
+    printf("Maior: %d, menor: %d\n", max, min);
+    fillBuckets(v, s, b, max, min, bnum);
     printf("Buckets preenchidos\n");
     sortBuckets(b, bnum);
     printf("Buckets ordenados\n");
@@ -162,6 +165,10 @@ int main(int argc, char *argv[]){
         writeArray(v, t, out);
     } else {
         int k = createRuns(t, SIZE_INTERNAL, sort, in);
+        if(k > 500){
+            printf("Numero de elementos muito alto\n");
+            return -2;
+        }
         printf("%d runs criadas com tamanho <= %d\n", k, SIZE_INTERNAL);
         mergeRuns(k, t, out);
         printf("Runs mescladas\n");
